@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
+}
+
+group 'de.sean'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = '17'
+targetCompatibility = '17'
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+mainClassName = "de.sean.bundesligatabelle.Tabelle"
+
+application {
+    mainClass = 'de.sean.bundesligatabelle.Tabelle'
+}
+
+dependencies {
+    //implementation group: 'org.openjfx', name: 'javafx', version: javafx.version
+    //implementation group: 'org.openjfx', name: 'javafx-controls', version: javafx.version
+
+    implementation('org.controlsfx:controlsfx:11.1.1')
+    implementation('com.dlsc.formsfx:formsfx-core:11.5.0') {
+        exclude(group: 'org.openjfx')
+    }
+    compileOnly('org.jetbrains:annotations:23.1.0')
+}
+
+javafx {
+    version = '18.0.2'
+    modules = [ 'javafx.controls' ]
+}
