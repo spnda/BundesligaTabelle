@@ -78,7 +78,7 @@ public class Tabelle extends Application {
                         new Team.SpielerListe(row.getItem()).open();
                     }
                 });
-                return row ;
+                return row;
             });
 
             tabelle.getColumns().addAll(icon, vereinsName, siege, unentschieden, niederlagen, punkte, goals);
@@ -94,18 +94,31 @@ public class Tabelle extends Application {
                 new Team.TeamEingabe(this).eingabe();
             });
 
+            final var sortierenButton = new Button();
+            sortierenButton.setText("Sortieren");
+            sortierenButton.setOnAction(event -> {
+                // Einfache InsertionSort implementation mit ArrayList (nicht mit normalen Arrays).
+                var items = tabelle.getItems();
+                for (int j = 1; j < tabelle.getItems().size(); ++j) {
+                    var key = items.get(j);
+                    int i = j - 1;
+                    while (i >= 0 && items.get(i).getPunkte() < key.getPunkte()) {
+                        items.set(i + 1, items.get(i));
+                        i -= 1;
+                    }
+                    items.set(i + 1, key);
+                }
+                tabelle.refresh();
+            });
+
             final var seasonBox = new ComboBox<String>();
-            seasonBox.getItems().addAll("2022", "2021", "2020");
+            for (int i = 2010; i < 2023; ++i)
+                seasonBox.getItems().add(String.valueOf(i));
             seasonBox.setCellFactory(season -> new ListCell<>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
                     super.updateItem(item, empty);
-
-                    if (item == null || empty) {
-                        setText(null);
-                    } else {
-                        setText(item);
-                    }
+                    setText(empty ? null : item);
                 }
             });
             seasonBox.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -119,7 +132,7 @@ public class Tabelle extends Application {
             final var rightBox = new VBox();
             rightBox.setPadding(new Insets(10, 10, 10, 10));
             rightBox.setSpacing(10.0);
-            rightBox.getChildren().addAll(addTeamButton, seasonBox);
+            rightBox.getChildren().addAll(addTeamButton, seasonBox, sortierenButton);
             layout.setRight(rightBox);
         }
 

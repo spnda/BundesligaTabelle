@@ -12,13 +12,18 @@ public class Spieler {
     private String vorname;
     private String nachname;
 
-    public Spieler() {
+    private int trikotNummer;
 
+    public Spieler() {
+        vorname = nachname = "";
+        trikotNummer = 0;
     }
 
     public String getName() {
         return vorname + " " + nachname;
     }
+
+    public Integer getTrikotNummer() {return trikotNummer; }
 
     public static class SpielerEingabe extends Stage {
         private final Team.SpielerListe liste;
@@ -35,6 +40,8 @@ public class Spieler {
             vornameInput.setPromptText("Vorname");
             final var nameInput = new TextField();
             nameInput.setPromptText("Name");
+            final var trikotNummerInput = new TextField();
+            trikotNummerInput.setPromptText("Trikotnummer");
 
             final var speichernButton = new Button();
             speichernButton.setText("Speichern");
@@ -42,6 +49,9 @@ public class Spieler {
                 var spieler = new Spieler();
                 spieler.vorname = vornameInput.getText();
                 spieler.nachname = nameInput.getText();
+                try {
+                    spieler.trikotNummer = Integer.parseUnsignedInt(trikotNummerInput.getText());
+                } catch (NumberFormatException ignored) {}
 
                 liste.team.getSpieler().add(spieler);
                 liste.tabelle.getItems().add(spieler);

@@ -41,7 +41,7 @@ public class Team {
     @SerializedName("teamIconUrl")
     private String iconUrl;
 
-    private ArrayList<Spieler> spieler;
+    private final ArrayList<Spieler> spieler;
 
     private transient Image iconImageCache;
 
@@ -121,7 +121,7 @@ public class Team {
 
         public void eingabe() {
             final var layout = new BorderPane();
-            final var scene = new Scene(layout, 200, 200);
+            final var scene = new Scene(layout, 200, 300);
 
             final var vbox = new VBox();
             vbox.setPadding(new Insets(10, 10, 10, 10));
@@ -136,13 +136,19 @@ public class Team {
             unentschiedenInput.setPromptText("Unentschieden");
             final var niederlagenInput = new TextField();
             niederlagenInput.setPromptText("Niederlagen");
+            final var toreInput = new TextField();
+            toreInput.setPromptText("Tore");
+            final var gegentoreInput = new TextField();
+            gegentoreInput.setPromptText("Gegentore");
 
             vereinInput.requestFocus();
-            vbox.getChildren().addAll(vereinInput, siegeInput, unentschiedenInput, niederlagenInput);
+            vbox.getChildren().addAll(vereinInput, siegeInput, unentschiedenInput, niederlagenInput, toreInput, gegentoreInput);
 
             final var speichernButton = new Button();
             speichernButton.setText("Speichern");
             speichernButton.setOnAction(event -> {
+                if (vereinInput.getText().isEmpty()) return; // Nicht das Fenster schließen ohne Namen.
+
                 var team = new Team();
                 team.name = vereinInput.getText();
 
@@ -154,6 +160,12 @@ public class Team {
                 } catch (NumberFormatException ignored) {}
                 try {
                     team.niederlagen = Integer.parseUnsignedInt(niederlagenInput.getText());
+                } catch (NumberFormatException ignored) {}
+                try {
+                    team.tore = Integer.parseUnsignedInt(toreInput.getText());
+                } catch (NumberFormatException ignored) {}
+                try {
+                    team.gegentore = Integer.parseUnsignedInt(gegentoreInput.getText());
                 } catch (NumberFormatException ignored) {}
 
                 tabelle.tabelle.getItems().add(team);
@@ -185,8 +197,10 @@ public class Team {
                 tabelle = new TableView<>();
                 final var name = new TableColumn<Spieler, String>("Name");
                 name.setCellValueFactory(new PropertyValueFactory<>("Name"));
+                final var trikotNummer = new TableColumn<Spieler, Integer>("Trikotnummer");
+                trikotNummer.setCellValueFactory(new PropertyValueFactory<>("TrikotNummer"));
 
-                tabelle.getColumns().add(name);
+                tabelle.getColumns().addAll(name, trikotNummer);
                 for (var spieler : team.spieler) {
                     tabelle.getItems().add(spieler);
                 }
