@@ -23,6 +23,8 @@ import java.sql.SQLException;
 public class Tabelle extends Application {
     DatabaseWrapper database;
 
+    String selectedSeason;
+
     TableView<Team> tabelle;
 
     public static void main(String[] args) {
@@ -38,10 +40,23 @@ public class Tabelle extends Application {
         return col;
     }
 
+    void updateSeason() {
+        final var teams = database.requestTeams(selectedSeason);
+        tabelle.getItems().clear();
+        for (var team : teams) {
+            tabelle.getItems().add(team);
+        }
+    }
+
     @Override
     public void start(@NotNull Stage stage) {
         database = new DatabaseWrapper();
         database.init();
+
+        for (int i = 2010; i < 2023; ++i)
+            database.addSaison(String.valueOf(i));
+
+        selectedSeason = database.getSaisons().get(0);
 
         final var layout = new BorderPane();
         final var scene = new Scene(layout, 600, 500);
@@ -90,30 +105,13 @@ public class Tabelle extends Application {
         {
             final var addTeamButton = new Button();
             addTeamButton.setText("Team hinzufügen");
-            addTeamButton.setOnAction(event -> {
-                new Team.TeamEingabe(this).eingabe();
-            });
-
-            final var sortierenButton = new Button();
-            sortierenButton.setText("Sortieren");
-            sortierenButton.setOnAction(event -> {
-                // Einfache InsertionSort implementation mit ArrayList (nicht mit normalen Arrays).
-                var items = tabelle.getItems();
-                for (int j = 1; j < tabelle.getItems().size(); ++j) {
-                    var key = items.get(j);
-                    int i = j - 1;
-                    while (i >= 0 && items.get(i).getPunkte() < key.getPunkte()) {
-                        items.set(i + 1, items.get(i));
-                        i -= 1;
-                    }
-                    items.set(i + 1, key);
-                }
-                tabelle.refresh();
-            });
+            addTeamButton.setOnAction(event -> new Team.TeamEingabe(this).eingabe());
 
             final var seasonBox = new ComboBox<String>();
-            for (int i = 2010; i < 2023; ++i)
-                seasonBox.getItems().add(String.valueOf(i));
+            final var seasons = database.getSaisons();
+            for (var season : seasons)
+                seasonBox.getItems().add(season);
+            seasonBox.setValue(selectedSeason);
             seasonBox.setCellFactory(season -> new ListCell<>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
@@ -122,19 +120,25 @@ public class Tabelle extends Application {
                 }
             });
             seasonBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-                final var teams = database.requestTeams(newValue);
-                tabelle.getItems().clear();
-                for (var team : teams) {
-                    tabelle.getItems().add(team);
-                }
+                selectedSeason = newValue;
+                updateSeason();
+            });
+
+            final var useActualValues = new Button();
+            useActualValues.setText("Echte Werte kopieren");
+            useActualValues.setOnAction(event -> {
+                database.updateFromAPI(selectedSeason);
+                updateSeason();
             });
 
             final var rightBox = new VBox();
             rightBox.setPadding(new Insets(10, 10, 10, 10));
             rightBox.setSpacing(10.0);
-            rightBox.getChildren().addAll(addTeamButton, seasonBox, sortierenButton);
+            rightBox.getChildren().addAll(addTeamButton, seasonBox, useActualValues);
             layout.setRight(rightBox);
         }
+
+        updateSeason();
 
         // scene.getStylesheets().add("style.css");
         stage.setTitle("Bundesliga Tabelle");

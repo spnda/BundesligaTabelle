@@ -1,6 +1,5 @@
 package de.sean.bundesligatabelle;
 
-import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -16,7 +15,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Box;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 
@@ -53,18 +51,22 @@ public class Team {
     public String getName() {
         return name;
     }
+    public void setName(@NotNull String name) { this.name = name; }
 
     public Integer getSiege() {
         return siege;
     }
+    public void setSiege(@NotNull Integer siege) { this.siege = siege; }
 
     public Integer getNiederlagen() {
         return niederlagen;
     }
+    public void setNiederlagen(@NotNull Integer niederlagen) { this.niederlagen = niederlagen; }
 
     public Integer getUnentschieden() {
         return unentschieden;
     }
+    public void setUnentschieden(@NotNull Integer unentschieden) { this.unentschieden = unentschieden; }
 
     public Integer getSpiele() {
         return siege + niederlagen + unentschieden;
@@ -73,10 +75,12 @@ public class Team {
     public Integer getTore() {
         return tore;
     }
+    public void setTore(@NotNull Integer tore) { this.tore = tore; }
 
     public Integer getGegentore() {
         return gegentore;
     }
+    public void setGegentore(@NotNull Integer gegentore) { this.gegentore = gegentore; }
 
     public Integer getTorDifferenz() { return tore - gegentore; }
 
@@ -169,6 +173,7 @@ public class Team {
                 } catch (NumberFormatException ignored) {}
 
                 tabelle.tabelle.getItems().add(team);
+                tabelle.database.addTeam(tabelle.selectedSeason, team);
                 close();
             });
             vbox.getChildren().add(speichernButton);

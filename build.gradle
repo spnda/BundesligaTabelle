@@ -33,6 +33,7 @@ dependencies {
         exclude(group: 'org.openjfx')
     }
     implementation('com.google.code.gson:gson:2.10')
+    implementation('mysql:mysql-connector-java:8.0.33')
     compileOnly('org.jetbrains:annotations:23.1.0')
 }
 
