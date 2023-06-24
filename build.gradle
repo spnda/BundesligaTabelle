@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.13'
+    id 'org.openjfx.javafxplugin' version '0.0.14'
 }
 
 group 'de.sean'
@@ -28,16 +28,16 @@ dependencies {
     //implementation group: 'org.openjfx', name: 'javafx', version: javafx.version
     //implementation group: 'org.openjfx', name: 'javafx-controls', version: javafx.version
 
-    implementation('org.controlsfx:controlsfx:11.1.1')
-    implementation('com.dlsc.formsfx:formsfx-core:11.5.0') {
+    implementation('org.controlsfx:controlsfx:11.1.2')
+    implementation('com.dlsc.formsfx:formsfx-core:11.6.0') {
         exclude(group: 'org.openjfx')
     }
-    implementation('com.google.code.gson:gson:2.10')
+    implementation('com.google.code.gson:gson:2.10.1')
     implementation('mysql:mysql-connector-java:8.0.33')
-    compileOnly('org.jetbrains:annotations:23.1.0')
+    compileOnly('org.jetbrains:annotations:24.0.1')
 }
 
 javafx {
-    version = '18.0.2'
+    version = '20.0.1'
     modules = [ 'javafx.controls' ]
 }

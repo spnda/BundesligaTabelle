@@ -43,11 +43,6 @@ public class DatabaseWrapper {
             }
         }
 
-        if (getSaisons().isEmpty()) {
-            if (!addSaison("2022"))
-                throw new RuntimeException("Failed to create saison 2022");
-        }
-
         client = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
                 .followRedirects(HttpClient.Redirect.NORMAL)
