@@ -98,7 +98,7 @@ public class DatabaseWrapper {
 
     public ArrayList<String> getSaisons() {
         try (var statement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-            if (!statement.execute("SELECT * FROM saisons"))
+            if (!statement.execute("SELECT * FROM saisons ORDER BY saison DESC"))
                 return new ArrayList<>();
 
             final var result = statement.getResultSet();
@@ -161,7 +161,7 @@ public class DatabaseWrapper {
         }
     }
 
-    public boolean addTeam(String saison, @NotNull Team team) {
+    public int addTeam(String saison, @NotNull Team team) {
         var sql = "INSERT INTO bundesliga" + saison + " VALUES(?,?,?,?,?,?)";
         try (var statement = connection.prepareStatement(sql)) {
             statement.setString(1, team.getName());
@@ -171,10 +171,27 @@ public class DatabaseWrapper {
             statement.setInt(5, team.getTore());
             statement.setInt(6, team.getGegentore());
 
-            return statement.execute();
+            return statement.executeUpdate();
         } catch (SQLException e) {
             System.out.println("SQLException: " + e.getMessage());
-            return false;
+            return 0;
+        }
+    }
+
+    public int updateTeam(String saison, @NotNull String oldName, @NotNull Team team) {
+        var sql = "UPDATE bundesliga" + saison + " SET teamName=?, siege=?, niederlagen=?, unentschieden=?, tore=?, gegentore=? WHERE teamName=?";
+        try (var statement = connection.prepareStatement(sql)) {
+            statement.setString(1, team.getName());
+            statement.setInt(2, team.getSiege());
+            statement.setInt(3, team.getNiederlagen());
+            statement.setInt(4, team.getUnentschieden());
+            statement.setInt(5, team.getTore());
+            statement.setInt(6, team.getGegentore());
+            statement.setString(7, oldName);
+            return statement.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("SQLException: " + e.getMessage());
+            return 0;
         }
     }
 }

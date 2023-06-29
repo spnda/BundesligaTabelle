@@ -12,13 +12,18 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 
+import java.beans.EventHandler;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class Team {
     @SerializedName("teamName")
@@ -184,50 +189,140 @@ public class Team {
         }
     }
 
-    public static class SpielerListe extends Stage {
-        Team team;
-        TableView<Spieler> tabelle;
+    public static class TeamOverview extends Stage {
+        private final Tabelle tabelle;
 
-        public SpielerListe(@NotNull Team team) {
+        Team team;
+        TableView<Spieler> spielerTabelle;
+
+        public TeamOverview(@NotNull Tabelle tabelle, @NotNull Team team) {
+            this.tabelle = tabelle;
             this.team = team;
+        }
+
+        private @NotNull TextFieldWithTitle createTextField(String initialText, String prompt) {
+            final var vbox = new VBox();
+
+            final var text = new Text();
+            text.setText(prompt);
+
+            final var input = new TextField();
+            input.setText(initialText);
+            input.setPromptText(prompt);
+            vbox.getChildren().addAll(text, input);
+
+            final var field = new TextFieldWithTitle();
+            field.vbox = vbox;
+            field.field = input;
+            return field;
+        }
+
+        public static class TextFieldWithTitle {
+            public VBox vbox;
+            public TextField field;
+        }
+
+        private void updateData(Consumer<Team> consumer) {
+            var oldName = team.getName();
+            consumer.accept(team);
+            tabelle.tabelle.refresh();
+            tabelle.database.updateTeam(tabelle.selectedSeason, oldName, team);
         }
 
         public void open() {
             final var layout = new BorderPane();
             layout.setPadding(new Insets(10, 10, 10, 10));
 
-            final var scene = new Scene(layout, 500, 200);
+            final var scene = new Scene(layout, 500, 400);
 
+            // Edit text fields
             {
-                tabelle = new TableView<>();
+                final var inputList = new HBox();
+
+                final var nameInput = createTextField(team.getName(), "Vereinsname");
+                nameInput.field.setOnKeyPressed(event -> {
+                    if (event.getCode() != KeyCode.ENTER) return;
+                    updateData((team) -> team.setName(nameInput.field.getText()));
+                });
+
+                final var siegeInput = createTextField(String.valueOf(team.getSiege()), "Siege");
+                siegeInput.field.setOnKeyPressed(event -> {
+                    if (event.getCode() != KeyCode.ENTER) return;
+                    updateData((team) -> team.setSiege(Integer.parseInt(siegeInput.field.getText())));
+                });
+
+                final var niederlagenInput = createTextField(String.valueOf(team.getNiederlagen()), "Niederlagen");
+                niederlagenInput.field.setOnKeyPressed(event -> {
+                    if (event.getCode() != KeyCode.ENTER) return;
+                    updateData((team) -> team.setNiederlagen(Integer.parseInt(niederlagenInput.field.getText())));
+                });
+
+                final var unentschiedenInput = createTextField(String.valueOf(team.getUnentschieden()), "Unentschieden");
+                unentschiedenInput.field.setOnKeyPressed(event -> {
+                    if (event.getCode() != KeyCode.ENTER) return;
+                    updateData((team) -> team.setUnentschieden(Integer.parseInt(unentschiedenInput.field.getText())));
+                });
+
+                final var toreInput = createTextField(String.valueOf(team.getTore()), "Tore");
+                toreInput.field.setOnKeyPressed(event -> {
+                    if (event.getCode() != KeyCode.ENTER) return;
+                    updateData((team) -> team.setTore(Integer.parseInt(toreInput.field.getText())));
+                });
+
+                final var gegentoreInput = createTextField(String.valueOf(team.getGegentore()), "Gegentore");
+                gegentoreInput.field.setOnKeyPressed(event -> {
+                    if (event.getCode() != KeyCode.ENTER) return;
+                    updateData((team) -> team.setGegentore(Integer.parseInt(gegentoreInput.field.getText())));
+                });
+
+                inputList.setSpacing(5.0);
+                inputList.getChildren().addAll(nameInput.vbox, siegeInput.vbox, niederlagenInput.vbox, unentschiedenInput.vbox, toreInput.vbox, gegentoreInput.vbox);
+                inputList.setPadding(new Insets(0, 0, 10, 0));
+
+                layout.setTop(inputList);
+
+                setOnCloseRequest(event -> updateData((team) -> {
+                    team.setName(nameInput.field.getText());
+                    team.setSiege(Integer.parseInt(siegeInput.field.getText()));
+                    team.setNiederlagen(Integer.parseInt(niederlagenInput.field.getText()));
+                    team.setUnentschieden(Integer.parseInt(unentschiedenInput.field.getText()));
+                    team.setTore(Integer.parseInt(toreInput.field.getText()));
+                    team.setGegentore(Integer.parseInt(gegentoreInput.field.getText()));
+                }));
+            }
+
+            // Player list
+            {
+                spielerTabelle = new TableView<>();
                 final var name = new TableColumn<Spieler, String>("Name");
                 name.setCellValueFactory(new PropertyValueFactory<>("Name"));
                 final var trikotNummer = new TableColumn<Spieler, Integer>("Trikotnummer");
                 trikotNummer.setCellValueFactory(new PropertyValueFactory<>("TrikotNummer"));
 
-                tabelle.getColumns().addAll(name, trikotNummer);
+                spielerTabelle.getColumns().addAll(name, trikotNummer);
                 for (var spieler : team.spieler) {
-                    tabelle.getItems().add(spieler);
+                    spielerTabelle.getItems().add(spieler);
                 }
-                layout.setCenter(tabelle);
+                layout.setCenter(spielerTabelle);
             }
 
+            // Player buttons
             {
-                final var addTeamButton = new Button();
-                addTeamButton.setText("Spieler hinzufügen");
-                addTeamButton.setOnAction(event -> {
+                final var addPlayerButton = new Button();
+                addPlayerButton.setText("Spieler hinzufügen");
+                addPlayerButton.setOnAction(event -> {
                     new Spieler.SpielerEingabe(this).eingabe();
                 });
 
                 final var rightBox = new VBox();
                 rightBox.setPadding(new Insets(10, 10, 10, 10));
                 rightBox.setSpacing(10.0);
-                rightBox.getChildren().add(addTeamButton);
+                rightBox.getChildren().add(addPlayerButton);
                 layout.setRight(rightBox);
             }
 
             setScene(scene);
-            setTitle(team.name);
+            setTitle("Team Overview");
             show();
         }
     }

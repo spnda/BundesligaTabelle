@@ -85,12 +85,13 @@ public class Tabelle extends Application {
             // Maximise column width
             tabelle.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+            // Make rows double-clickable
             tabelle.setRowFactory(tv -> {
                 TableRow<Team> row = new TableRow<>();
                 row.setOnMouseClicked(event -> {
                     if (event.getClickCount() == 2 && (!row.isEmpty())) {
-                        // Spielerverwaltung öffnen
-                        new Team.SpielerListe(row.getItem()).open();
+                        // Team-Übersicht öffnen
+                        new Team.TeamOverview(this, row.getItem()).open();
                     }
                 });
                 return row;
@@ -143,6 +144,7 @@ public class Tabelle extends Application {
         // scene.getStylesheets().add("style.css");
         stage.setTitle("Bundesliga Tabelle");
         stage.setScene(scene);
+        stage.centerOnScreen();
         stage.show();
     }
 }

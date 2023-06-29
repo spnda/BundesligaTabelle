@@ -26,9 +26,9 @@ public class Spieler {
     public Integer getTrikotNummer() {return trikotNummer; }
 
     public static class SpielerEingabe extends Stage {
-        private final Team.SpielerListe liste;
+        private final Team.TeamOverview liste;
 
-        public SpielerEingabe(Team.SpielerListe liste) {
+        public SpielerEingabe(Team.TeamOverview liste) {
             this.liste = liste;
         }
 
@@ -54,7 +54,7 @@ public class Spieler {
                 } catch (NumberFormatException ignored) {}
 
                 liste.team.getSpieler().add(spieler);
-                liste.tabelle.getItems().add(spieler);
+                liste.spielerTabelle.getItems().add(spieler);
             });
 
             final var vbox = new VBox();
