@@ -41,3 +41,9 @@ javafx {
     version = '20.0.1'
     modules = [ 'javafx.controls' ]
 }
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'de.sean.bundesligatabelle.Tabelle'
+    }
+}

@@ -160,7 +160,7 @@ public class Tabelle extends Application {
 
         updateTable();
 
-        scene.getStylesheets().add("style.css");
+        // scene.getStylesheets().add("style.css");
         stage.setTitle("Bundesliga Tabelle");
         stage.setScene(scene);
         stage.centerOnScreen();
