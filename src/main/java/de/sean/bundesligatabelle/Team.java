@@ -101,8 +101,16 @@ public class Team {
         return spieler;
     }
 
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(String url) {
+        this.iconUrl = url;
+    }
+
     public Node getIcon() {
-        if (iconUrl == null) {
+        if (iconUrl == null || iconUrl.isEmpty()) {
             return null;
         }
 
@@ -178,7 +186,7 @@ public class Team {
                 } catch (NumberFormatException ignored) {}
 
                 tabelle.tabelle.getItems().add(team);
-                tabelle.database.addTeam(tabelle.selectedSeason, team);
+                tabelle.database.addTeam(tabelle.selectedSeason, tabelle.liga, team);
                 close();
             });
             vbox.getChildren().add(speichernButton);
@@ -226,7 +234,7 @@ public class Team {
             var oldName = team.getName();
             consumer.accept(team);
             tabelle.tabelle.refresh();
-            tabelle.database.updateTeam(tabelle.selectedSeason, oldName, team);
+            tabelle.database.updateTeam(tabelle.selectedSeason, tabelle.liga, oldName, team);
         }
 
         public void open() {
@@ -281,6 +289,7 @@ public class Team {
 
                 layout.setTop(inputList);
 
+                // Alles abspeichern wenn das Fenster schließt
                 setOnCloseRequest(event -> updateData((team) -> {
                     team.setName(nameInput.field.getText());
                     team.setSiege(Integer.parseInt(siegeInput.field.getText()));

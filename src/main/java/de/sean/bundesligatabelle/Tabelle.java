@@ -25,6 +25,8 @@ public class Tabelle extends Application {
 
     String selectedSeason;
 
+    Integer liga;
+
     TableView<Team> tabelle;
 
     public static void main(String[] args) {
@@ -35,13 +37,13 @@ public class Tabelle extends Application {
         final var col = new TableColumn<Team, T>(name);
         col.setSortable(false);
         col.setEditable(false);
-        col.setResizable(false);
+        // col.setResizable(false);
         col.setCellValueFactory(new PropertyValueFactory<>(property));
         return col;
     }
 
-    void updateSeason() {
-        final var teams = database.requestTeams(selectedSeason);
+    void updateTable() {
+        final var teams = database.requestTeams(selectedSeason, liga);
         tabelle.getItems().clear();
         for (var team : teams) {
             tabelle.getItems().add(team);
@@ -57,9 +59,10 @@ public class Tabelle extends Application {
             database.addSaison(String.valueOf(i));
 
         selectedSeason = database.getSaisons().get(0);
+        liga = database.getLigen(selectedSeason).get(0);
 
         final var layout = new BorderPane();
-        final var scene = new Scene(layout, 600, 500);
+        final var scene = new Scene(layout, 800, 500);
 
         tabelle = new TableView<>();
 
@@ -108,6 +111,9 @@ public class Tabelle extends Application {
             addTeamButton.setText("Team hinzufügen");
             addTeamButton.setOnAction(event -> new Team.TeamEingabe(this).eingabe());
 
+            final var seasonText = new Text();
+            seasonText.setText("Saison: ");
+
             final var seasonBox = new ComboBox<String>();
             final var seasons = database.getSaisons();
             for (var season : seasons)
@@ -122,26 +128,39 @@ public class Tabelle extends Application {
             });
             seasonBox.valueProperty().addListener((observable, oldValue, newValue) -> {
                 selectedSeason = newValue;
-                updateSeason();
+                updateTable();
             });
+
+            final var ligaText = new Text();
+            ligaText.setText("Liga: ");
+
+            final var ligaBox = new ComboBox<Integer>();
+            final var ligen = database.getLigen(selectedSeason);
+            for (var liga : ligen)
+                ligaBox.getItems().add(liga);
+            ligaBox.setValue(ligen.get(0));
+            ligaBox.valueProperty().addListener(((observable, oldValue, newValue) -> {
+                liga = newValue;
+                updateTable();
+            }));
 
             final var useActualValues = new Button();
             useActualValues.setText("Echte Werte kopieren");
             useActualValues.setOnAction(event -> {
-                database.updateFromAPI(selectedSeason);
-                updateSeason();
+                database.updateFromAPI(selectedSeason, liga);
+                updateTable();
             });
 
             final var rightBox = new VBox();
             rightBox.setPadding(new Insets(10, 10, 10, 10));
             rightBox.setSpacing(10.0);
-            rightBox.getChildren().addAll(addTeamButton, seasonBox, useActualValues);
+            rightBox.getChildren().addAll(addTeamButton, seasonText, seasonBox, ligaText, ligaBox, useActualValues);
             layout.setRight(rightBox);
         }
 
-        updateSeason();
+        updateTable();
 
-        // scene.getStylesheets().add("style.css");
+        scene.getStylesheets().add("style.css");
         stage.setTitle("Bundesliga Tabelle");
         stage.setScene(scene);
         stage.centerOnScreen();

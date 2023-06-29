@@ -27,6 +27,10 @@ public class DatabaseWrapper {
 
     private Connection connection;
 
+    private String getTableName(String saison, Integer liga) {
+        return "bundesliga" + saison + "_" + liga;
+    }
+
     public void init() {
         try {
             connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/bundesliga", "root", "password");
@@ -53,9 +57,11 @@ public class DatabaseWrapper {
                 .create();
     }
 
-    public void updateFromAPI(@NotNull String saison) {
+    public void updateFromAPI(@NotNull String saison, Integer liga) {
+        assert(liga > 0 && liga < 4);
+
         final var request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "getbltable/bl1/" + saison))
+                .uri(URI.create(baseUrl + "getbltable/bl" + liga + "/" + saison))
                 .GET()
                 .build();
 
@@ -71,13 +77,13 @@ public class DatabaseWrapper {
 
             // Clear table
             try (var statement = connection.createStatement()) {
-                statement.execute("DELETE FROM bundesliga" + saison + " WHERE 1");
+                statement.execute("DELETE FROM " + getTableName(saison, liga) + " WHERE 1");
             } catch (SQLException e) {
                 System.out.println("SQLException: " + e.getMessage());
             }
 
             for (var team : list) {
-                addTeam(saison, team);
+                addTeam(saison, liga, team);
             }
         } catch (IOException | InterruptedException ignored) {}
     }
@@ -113,18 +119,24 @@ public class DatabaseWrapper {
         }
     }
 
-    public boolean addSaison(String saison) {
-        if (getSaisons().contains(saison)) {
-            return false;
-        }
+    public ArrayList<Integer> getLigen(String saison) {
+        return new ArrayList<>(Arrays.asList(1, 2, 3)); // TODO: Make this dynamic.
+    }
 
-        try (var statement = connection.createStatement()) {
-            var table = "bundesliga" + saison;
-            var sql = "CREATE TABLE %s(teamName VARCHAR(255), siege INT, niederlagen INT, unentschieden INT, tore INT, gegentore INT)";
-            statement.execute(String.format(sql, table));
-        } catch (SQLException e) {
-            System.out.println("SQLException: " + e.getMessage());
+    public boolean addSaison(String saison) {
+        /*if (getSaisons().contains(saison)) {
             return false;
+        }*/
+
+        for (int i = 1; i < 4; ++i) {
+            try (var statement = connection.createStatement()) {
+                var table = getTableName(saison, i);
+                var sql = "CREATE TABLE %s(teamName VARCHAR(255), siege INT, niederlagen INT, unentschieden INT, tore INT, gegentore INT, teamIcon TEXT)";
+                statement.execute(String.format(sql, table));
+            } catch (SQLException e) {
+                System.out.println("SQLException: " + e.getMessage());
+                return false;
+            }
         }
 
         try (var statement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
@@ -135,10 +147,9 @@ public class DatabaseWrapper {
         }
     }
 
-    public ArrayList<Team> requestTeams(String saison) {
+    public ArrayList<Team> requestTeams(String saison, Integer liga) {
         try (var statement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-            var tabelle = "bundesliga" + saison;
-            if (!statement.execute("SELECT * FROM " + tabelle)) {
+            if (!statement.execute("SELECT * FROM " + getTableName(saison, liga))) {
                 return new ArrayList<>();
             }
 
@@ -152,6 +163,7 @@ public class DatabaseWrapper {
                 team.setUnentschieden(result.getInt("unentschieden"));
                 team.setTore(result.getInt("tore"));
                 team.setGegentore(result.getInt("gegentore"));
+                team.setIconUrl(result.getString("teamIcon"));
                 list.add(team);
             }
             return list;
@@ -161,8 +173,8 @@ public class DatabaseWrapper {
         }
     }
 
-    public int addTeam(String saison, @NotNull Team team) {
-        var sql = "INSERT INTO bundesliga" + saison + " VALUES(?,?,?,?,?,?)";
+    public int addTeam(String saison, Integer liga, @NotNull Team team) {
+        var sql = "INSERT INTO " + getTableName(saison, liga) + " VALUES(?,?,?,?,?,?,?)";
         try (var statement = connection.prepareStatement(sql)) {
             statement.setString(1, team.getName());
             statement.setInt(2, team.getSiege());
@@ -170,6 +182,7 @@ public class DatabaseWrapper {
             statement.setInt(4, team.getUnentschieden());
             statement.setInt(5, team.getTore());
             statement.setInt(6, team.getGegentore());
+            statement.setString(7, team.getIconUrl());
 
             return statement.executeUpdate();
         } catch (SQLException e) {
@@ -178,8 +191,8 @@ public class DatabaseWrapper {
         }
     }
 
-    public int updateTeam(String saison, @NotNull String oldName, @NotNull Team team) {
-        var sql = "UPDATE bundesliga" + saison + " SET teamName=?, siege=?, niederlagen=?, unentschieden=?, tore=?, gegentore=? WHERE teamName=?";
+    public int updateTeam(String saison, Integer liga, @NotNull String oldName, @NotNull Team team) {
+        var sql = "UPDATE " + getTableName(saison, liga) + " SET teamName=?, siege=?, niederlagen=?, unentschieden=?, tore=?, gegentore=? WHERE teamName=?";
         try (var statement = connection.prepareStatement(sql)) {
             statement.setString(1, team.getName());
             statement.setInt(2, team.getSiege());
